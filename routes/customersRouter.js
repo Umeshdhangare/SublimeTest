@@ -111,9 +111,63 @@ const getCustomerByQuery = async (req, res) => {
     }   
 }
 
+const updateCustomer = async (req, res) => {
+    try {
+        const id = req.params.customerId;
+        const {firstname, lastname} = req.body;
+
+        const existingCustomer = await Customer.findById(id);
+
+        if(!existingCustomer){
+            throw new Error("Customer not found");
+        }
+
+        if(firstname) existingCustomer.firstname = firstname;
+        if(lastname) existingCustomer.lastname = lastname;
+
+        await existingCustomer.save();
+
+        res.status(200).send({
+            status:"success",
+            message:"Customer updated successfully!",
+            data: existingCustomer
+        })
+    } catch(e) {
+        res.status(500).send({
+            status:"failed",
+            message:e.message
+        })
+    }
+}
+
+const deleteCustomer = async (req, res) => {
+    try{
+        const id = req.params.customerId;
+        const existCustomer = await Customer.findById(id);
+
+        if(!existCustomer){
+            throw new Error("Customer does not exist");
+        }
+
+        await Customer.deleteOne({_id: id});
+
+        res.status(200).send({
+            status:"success",
+            message:"Successfully deleted customer"
+        })
+    } catch(e) {
+        res.status(500).send({
+            status:"failed",
+            message:e.message
+        })
+    } 
+}
+
 customerRouter.post("/", validations, createCustomer);
 customerRouter.get("/cities/", getUniqueCities);
 customerRouter.get("/query", getCustomerByQuery);
 customerRouter.get("/:customerId", getCustomer);
+customerRouter.put("/:customerId", updateCustomer);
+customerRouter.delete("/:customerId", deleteCustomer);
 
 module.exports = customerRouter;
